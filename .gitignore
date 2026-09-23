@@ -1,0 +1,6 @@
+# Never commit API keys or personal config
+config.js
+*.key
+.env
+*.zip
+.DS_Store

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>Jev for Gmail 설정</title>
+<style>
+  body{font:14px/1.6 -apple-system,Roboto,Arial,sans-serif;max-width:640px;margin:32px auto;color:#202124;padding:0 16px}
+  h1{font-size:20px;margin-bottom:4px}
+  .sub{color:#5f6368;margin-top:0}
+  label{display:block;font-weight:600;margin-top:18px}
+  .hint{font-weight:400;color:#5f6368;font-size:12px}
+  input,textarea{width:100%;box-sizing:border-box;padding:8px;border:1px solid #dadce0;border-radius:6px;font:inherit;margin-top:4px}
+  textarea{min-height:70px}
+  .row{display:flex;gap:8px;margin-top:20px}
+  button{padding:8px 14px;border-radius:6px;border:1px solid #1a73e8;background:#1a73e8;color:#fff;cursor:pointer;font:inherit}
+  button.sec{background:#fff;color:#1a73e8}
+  #status{margin-top:12px;font-size:13px}
+  .warn{background:#fef7e0;border:1px solid #f9ab00;border-radius:8px;padding:10px 12px;margin-top:20px;font-size:13px}
+</style>
+</head>
+<body>
+  <h1>Jev for Gmail 설정</h1>
+  <p class="sub">입력한 정보는 이 브라우저에만 저장되며 다른 곳으로 전송되지 않습니다. API 키는 채점 요청 시 TypeSafe로만 사용됩니다.</p>
+
+  <div class="warn">
+    <b>알아두세요.</b> 채점할 때 메일 제목과 본문(식별번호는 가림)이 TypeSafe 서버(미국)로 전송됩니다.
+    환자 관련으로 보이는 메일(🔒)은 전송하지 않지만, 필터가 완벽하지 않습니다. 기관의 개인정보 규정을 먼저 확인하세요.
+  </div>
+
+  <label>TypeSafe API 키 <span class="hint">console.typesafe.ai/keys 에서 발급</span>
+    <input id="apiKey" type="password" autocomplete="off" placeholder="apikey_...">
+  </label>
+
+  <label>나에 대한 설명 <span class="hint">Jev가 "이 사람에게 중요한가"를 판단할 때 사용 (예: 홍길동, OO병원 순환기내과 교수, 임상연구자)</span>
+    <input id="recipient" type="text">
+  </label>
+
+  <label>내 이메일 주소 <span class="hint">쉼표로 구분. 내가 이미 회신했는지 판단할 때 사용</span>
+    <input id="recipientEmails" type="text" placeholder="me@gmail.com, me@hospital.org">
+  </label>
+
+  <label>환자 관련 메일 발신자 (제외) <span class="hint">쉼표/줄바꿈으로 구분. 시술 스케줄·입원 명단 등을 보내는 주소. "@도메인" 형식도 가능</span>
+    <textarea id="patientSenders" placeholder="schedule@hospital.org&#10;@ward.hospital.org"></textarea>
+  </label>
+
+  <div class="row">
+    <button id="save">저장</button>
+    <button id="test" class="sec">연결 테스트</button>
+  </div>
+  <div id="status"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
