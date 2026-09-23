@@ -9,7 +9,7 @@
   .sub{color:#5f6368;margin-top:0}
   label{display:block;font-weight:600;margin-top:18px}
   .hint{font-weight:400;color:#5f6368;font-size:12px}
-  input,textarea{width:100%;box-sizing:border-box;padding:8px;border:1px solid #dadce0;border-radius:6px;font:inherit;margin-top:4px}
+  input,textarea,select{width:100%;box-sizing:border-box;padding:8px;border:1px solid #dadce0;border-radius:6px;font:inherit;margin-top:4px}
   textarea{min-height:70px}
   .row{display:flex;gap:8px;margin-top:20px}
   button{padding:8px 14px;border-radius:6px;border:1px solid #1a73e8;background:#1a73e8;color:#fff;cursor:pointer;font:inherit}
@@ -20,22 +20,28 @@
 </head>
 <body>
   <h1>Jev for Gmail 설정</h1>
-  <p class="sub">입력한 정보는 이 브라우저에만 저장되며 다른 곳으로 전송되지 않습니다. API 키는 채점 요청 시 TypeSafe로만 사용됩니다.</p>
+  <p class="sub">API 키와 필터 설정은 이 브라우저에만 저장됩니다. TypeSafe에는 비식별화된 역할과 안전 검사를 통과한 메일 내용만 전송됩니다.</p>
 
   <div class="warn">
-    <b>알아두세요.</b> 채점할 때 메일 제목과 본문(식별번호는 가림)이 TypeSafe 서버(미국)로 전송됩니다.
-    환자 관련으로 보이는 메일(🔒)은 전송하지 않지만, 필터가 완벽하지 않습니다. 기관의 개인정보 규정을 먼저 확인하세요.
+    <b>알아두세요.</b> 채점할 때 주소 헤더를 제거하고 식별정보를 가린 제목과 최신 본문 최대 2,500자가 TypeSafe 서버(미국)로 전송됩니다.
+    환자·민감정보가 의심되거나 최종 안전 검사를 통과하지 못한 메일(🔒)은 전송하지 않습니다. 기관의 개인정보 규정을 먼저 확인하세요.
   </div>
 
   <label>TypeSafe API 키 <span class="hint">console.typesafe.ai/keys 에서 발급</span>
     <input id="apiKey" type="password" autocomplete="off" placeholder="apikey_...">
   </label>
 
-  <label>나에 대한 설명 <span class="hint">Jev가 "이 사람에게 중요한가"를 판단할 때 사용 (예: 홍길동, OO병원 순환기내과 교수, 임상연구자)</span>
-    <input id="recipient" type="text">
+  <label>비식별 역할 <span class="hint">이름·소속 없이 중요도 판단에만 사용</span>
+    <select id="recipientRole">
+      <option value="healthcare_research">의료인·임상연구자</option>
+      <option value="healthcare">의료인</option>
+      <option value="research">연구자</option>
+      <option value="academic_admin">학술·기관 행정</option>
+      <option value="general_professional">일반 업무 사용자</option>
+    </select>
   </label>
 
-  <label>내 이메일 주소 <span class="hint">쉼표로 구분. 내가 이미 회신했는지 판단할 때 사용</span>
+  <label>내 이메일 주소 <span class="hint">쉼표로 구분. 브라우저 안에서 내 답장을 [SELF]로 치환할 때만 사용하며 TypeSafe로 보내지 않음</span>
     <input id="recipientEmails" type="text" placeholder="me@gmail.com, me@hospital.org">
   </label>
 

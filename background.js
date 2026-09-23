@@ -1,6 +1,7 @@
 // Jev for Gmail - background service worker
 // Calls the TypeSafe Jev API. Each user enters their own API key in the options page;
 // it is stored only in this browser profile (chrome.storage.local).
+importScripts('privacy.js');
 
 async function getCfg() {
   const { __jev_cfg } = await chrome.storage.local.get('__jev_cfg');
@@ -12,23 +13,23 @@ chrome.runtime.onInstalled.addListener(d => { if (d.reason === 'install') chrome
 const QUESTIONS = {
   needs_action: {
     type: 'noul',
-    instructions: 'Does this email require `recipient` to personally do something (reply, approve, sign up, register, submit, correct, confirm, prepare) rather than just read it?',
+    instructions: 'Does this email require the recipient to personally do something (reply, approve, sign up, register, submit, correct, confirm, prepare) rather than just read it?',
     criteria: { true: 'A concrete action by the recipient is requested or clearly needed', false: 'Informational, promotional, automated notice, or no action needed' }
   },
   urgency: {
     type: 'score',
-    instructions: 'How time-sensitive is this email for `recipient`, given `now`? Consider any deadlines or dates in the body.',
+    instructions: 'How time-sensitive is this email for the recipient, given `now`? Consider any deadlines or dates in the body.',
     criteria: ['No time pressure or not relevant', 'Should be handled within the next few weeks', 'Should be handled within the next few days', 'Needs attention today, deadline imminent, or already overdue']
   },
   importance: {
     type: 'score',
-    instructions: "How important is this email to `recipient`'s professional work (patient care, research/manuscripts, IRB/regulatory, hospital duties, academic roles)?",
+    instructions: "How important is this email to the anonymized `recipient_role` (research/manuscripts, IRB/regulatory, hospital duties, academic roles)?",
     criteria: ['Marketing, newsletter, spam, or irrelevant', 'Low-value FYI or routine automated notice', 'Relevant work information worth reading', 'Important: affects his patients, his manuscripts/grants/IRB, or formal obligations']
   },
   already_handled: {
     type: 'noul',
-    instructions: 'Based on `email.thread_text` (messages sent from `recipient_emails` are his own replies or forwards), has `recipient` already done what this email asks, or is the matter clearly over given `now`?',
-    criteria: { true: 'Evidence shows he already replied/approved/registered, or the deadline/event has clearly passed', false: 'No evidence it was handled; still pending (or no action was ever needed)' }
+    instructions: 'Based on `email.thread_text` (a redacted address header marked `[SELF]` is the recipient), has the recipient already done what this email asks, or is the matter clearly over given `now`?',
+    criteria: { true: 'Evidence shows the recipient already replied/approved/registered, or the deadline/event has clearly passed', false: 'No evidence it was handled; still pending (or no action was ever needed)' }
   },
   category: {
     type: 'choice',
@@ -64,12 +65,21 @@ function nowSeoul() {
   return new Date().toLocaleString('sv-SE', { timeZone: 'Asia/Seoul' }).slice(0, 16) + ' (Asia/Seoul)';
 }
 
+const RECIPIENT_ROLES = {
+  healthcare_research: 'healthcare professional and clinical researcher',
+  healthcare: 'healthcare professional',
+  research: 'academic researcher',
+  academic_admin: 'academic and institutional administrator',
+  general_professional: 'professional Gmail user'
+};
+
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'jev-score' || msg?.type === 'jev-test') {
     getCfg().then(cfg => {
       if (!cfg.apiKey) throw new Error('API 키가 설정되지 않았습니다. 확장 옵션에서 입력하세요.');
-      const email = msg.type === 'jev-test' ? { subject: '연결 테스트', preview: '다음 주 수요일까지 회신 부탁드립니다.' } : msg.email;
-      const state = { recipient: cfg.recipient || 'Gmail user', recipient_emails: cfg.recipientEmails || [], now: nowSeoul(), email };
+      const candidate = msg.type === 'jev-test' ? { subject: '연결 테스트', sender_type: 'automated', preview: '다음 주 수요일까지 회신 부탁드립니다.' } : msg.email;
+      const email = JevPrivacy.validateOutboundEmail(candidate);
+      const state = { recipient_role: RECIPIENT_ROLES[cfg.recipientRole] || RECIPIENT_ROLES.healthcare_research, now: nowSeoul(), email };
       return callJev(state, cfg.apiKey);
     })
       .then(j => sendResponse({ ok: true, answers: j.answers, usage: j.usage, model: j.model }))
