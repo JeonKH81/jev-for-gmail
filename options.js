@@ -3,7 +3,7 @@ const split = s => s.split(/[\s,;]+/).map(x => x.trim().toLowerCase()).filter(Bo
 
 chrome.storage.local.get('__jev_cfg').then(({ __jev_cfg: c = {} }) => {
   $('apiKey').value = c.apiKey || '';
-  $('recipient').value = c.recipient || '';
+  $('recipientRole').value = c.recipientRole || 'healthcare_research';
   $('recipientEmails').value = (c.recipientEmails || []).join(', ');
   $('patientSenders').value = (c.patientSenders || []).join('\n');
 });
@@ -11,7 +11,7 @@ chrome.storage.local.get('__jev_cfg').then(({ __jev_cfg: c = {} }) => {
 $('save').addEventListener('click', async () => {
   const cfg = {
     apiKey: $('apiKey').value.trim(),
-    recipient: $('recipient').value.trim(),
+    recipientRole: $('recipientRole').value,
     recipientEmails: split($('recipientEmails').value),
     patientSenders: split($('patientSenders').value)
   };
