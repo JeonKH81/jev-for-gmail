@@ -24,7 +24,7 @@
 
   <div class="warn">
     <b>알아두세요.</b> 채점할 때 주소 헤더를 제거하고 식별정보를 가린 제목과 최신 본문 최대 2,500자가 TypeSafe 서버(미국)로 전송됩니다.
-    환자·민감정보가 의심되거나 최종 안전 검사를 통과하지 못한 메일(🔒)은 전송하지 않습니다. 기관의 개인정보 규정을 먼저 확인하세요.
+    명시된 환자명·환자 ID나 주민번호·카드·계좌·여권번호처럼 위험도가 높은 값이 있거나 최종 안전 검사를 통과하지 못한 메일(🔒)은 전송하지 않습니다. 기관의 개인정보 규정을 먼저 확인하세요.
   </div>
 
   <label>TypeSafe API 키 <span class="hint">console.typesafe.ai/keys 에서 발급</span>
@@ -45,7 +45,7 @@
     <input id="recipientEmails" type="text" placeholder="me@gmail.com, me@hospital.org">
   </label>
 
-  <label>환자 관련 메일 발신자 (제외) <span class="hint">쉼표/줄바꿈으로 구분. 시술 스케줄·입원 명단 등을 보내는 주소. "@도메인" 형식도 가능</span>
+  <label>환자 관련 메일 발신자 (제외) <span class="hint">쉼표/줄바꿈으로 구분. 등록한 발신자의 메일은 모두 잠깁니다. "@도메인"은 해당 기관의 모든 메일을 잠그므로 신중히 사용하세요.</span>
     <textarea id="patientSenders" placeholder="schedule@hospital.org&#10;@ward.hospital.org"></textarea>
   </label>
 

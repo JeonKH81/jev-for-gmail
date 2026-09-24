@@ -18,10 +18,11 @@
   const ADDRESS_RE = /(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주)\S*\s+\S+(?:시|군|구)\s+[^\n,]{0,40}?(?:로|길)\s*\d+(?:번길\s*\d+)?(?:\s*\([^)\n]{0,20}\))?/g;
   const ADDRESS_WORD_RE = /(주소|자택|배송지|거주지|우편\s*번호|address)\s*[:：]?[^\n]{0,40}(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주)/gi;
   const SECRET_RE = /((?:비밀\s*번호|password|PW|pw|ID|아이디)\s*[:：]\s*)\S+/g;
+  const AUTH_SECRET_RE = /(?:OTP|인증\s*번호|보안\s*코드)\s*[:：#-]?\s*\d{4,8}/gi;
   const STRUCTURED_NUMBER_RE = /\b(?!(?:19|20)\d{2}-\d{1,2}-\d{1,2}\b)\d{2,6}-\d{2,6}-\d{2,8}(?:-\d{1,4})?\b/g;
 
-  const PATIENT_WORD_RE = /환자|시술\s*(?:스케줄|일정)|입원\s*(?:예정|명단)|병동|병상|등록번호|진단명|외래|협진|컨설트|consult|퇴원|수술\s*일정|검사\s*일정|CAG|PCI|EPS|ablation|ECMO|pacemaker|PPM|ICD\b|대상자|participant|subject\s*id|SAE\b|SUSAR|이상반응|adverse|응급실|타과\s*의뢰|의뢰\s*회신|DICOM|PMS\b|소견서|사망|patient\s*(?:name|id)|MRN/i;
-  const PERSONAL_WORD_RE = /주민\s*(?:등록)?\s*번호|주민등록|계좌|통장|입금|송금|이체|예금주|여권|passport|카드\s*번호|card\s*number|비밀\s*번호|패스워드|password|인증\s*번호|OTP|보안\s*코드|주소지|자택|배송지|거주지|우편\s*번호|등본|초본|가족관계|신분증|운전\s*면허|급여\s*명세서|연말정산|원천징수|건강\s*검진|보험\s*증권|대출/i;
+  const LABELED_PATIENT_NAME_RE = /(?:환자\s*(?:명|이름)|patient\s*name)\s*[:：]\s*(?:[가-힣]{2,4}|[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/gi;
+  const CLINICAL_PATIENT_NAME_RE = /환자\s+[가-힣]{2,4}(?:님)?\s+(?:검사|진료|입원|퇴원|시술|수술|처방|예약|결과)/g;
   const HEADER_RE = /^\s*(from|to|cc|bcc|reply-to|sender|보낸\s*사람|받는\s*사람|참조|숨은\s*참조|회신\s*주소|발신|수신)\s*[:：].*$/gim;
 
   const test = (re, value) => { re.lastIndex = 0; return re.test(value || ''); };
@@ -33,9 +34,10 @@
     if (normalizedSenders.some(email => normalizedRules.some(rule => rule.startsWith('@') ? email.endsWith(rule) : email === rule))) return 'patient';
     const visible = `${subject}\n${snippet}`;
     const all = `${visible}\n${threadText}`;
-    if (PATIENT_WORD_RE.test(all) || test(PATIENT_ID_RE, all)) return 'patient';
-    if (PERSONAL_WORD_RE.test(all)) return 'personal';
-    if ([RRN_RE, CARD_RE, ACCOUNT_RE, PASSPORT_RE, ADDRESS_RE, ADDRESS_WORD_RE].some(re => test(re, all))) return 'personal';
+    if ([PATIENT_ID_RE, LABELED_PATIENT_NAME_RE, CLINICAL_PATIENT_NAME_RE].some(re => test(re, all))) return 'patient';
+    // Lock only high-confidence values. Ordinary words such as "외래", "입금",
+    // "participant", or "주소" are not sufficient by themselves.
+    if ([RRN_RE, CARD_RE, ACCOUNT_RE, PASSPORT_RE, AUTH_SECRET_RE].some(re => test(re, all))) return 'personal';
     return null;
   }
 
@@ -49,6 +51,7 @@
       .replace(PASSPORT_RE, '[여권번호]')
       .replace(PATIENT_ID_RE, '[환자ID]')
       .replace(ACCOUNT_RE, '[계좌정보]')
+      .replace(AUTH_SECRET_RE, '[인증정보]')
       .replace(STRUCTURED_NUMBER_RE, '[번호]')
       .replace(SECRET_RE, '$1[가림]')
       .replace(ADDRESS_RE, '[주소]')
