@@ -12,7 +12,7 @@
   const CARD_RE = /\b(?:\d{4}[- ]?){3}\d{4}\b/g;
   const ACCOUNT_RE = /(계좌|은행|입금|예금주|통장|account)[^\n]{0,40}\d[\d-]{8,}\d/gi;
   const PASSPORT_RE = /(여권\s*번호|passport\s*(?:no|number))\s*[:：.]?\s*[A-Z]{1,2}\d{7,8}/gi;
-  const PATIENT_ID_RE = /(?:환자\s*(?:번호|ID)|patient\s*id|MRN|등록번호)\s*[:：#-]?\s*[A-Z0-9-]{5,}/gi;
+  const PATIENT_ID_RE = /(?:환자\s*(?:등록\s*)?(?:번호|ID)|patient\s*(?:registration\s*(?:no|number)|id)|MRN)\s*[:：#-]?\s*[A-Z0-9-]{5,}/gi;
   const DATE_OF_BIRTH_RE = /\b(?:19[0-9]{2}|20[0-9])[-./]\d{1,2}[-./]\d{1,2}\b/g;
   const LONG_NUMBER_RE = /\b\d{7,}\b/g;
   const ADDRESS_RE = /(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주)\S*\s+\S+(?:시|군|구)\s+[^\n,]{0,40}?(?:로|길)\s*\d+(?:번길\s*\d+)?(?:\s*\([^)\n]{0,20}\))?/g;
