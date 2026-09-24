@@ -74,6 +74,21 @@ test('business registration numbers are not mistaken for patient IDs', () => {
   assert.deepEqual(privacy.finalSafetyScan(JSON.stringify(result.email)), []);
 });
 
+test('masking placeholders are not mistaken for remaining sensitive data', () => {
+  assert.deepEqual(privacy.finalSafetyScan('08826 [주소] 서울대학교'), []);
+  const result = privacy.prepareOutbound({
+    subject: '대학 발전 설문 참여 요청',
+    threadText: '설문 참여를 부탁드립니다.\n08826 서울시 관악구 관악로 1 서울대학교',
+    senderEmails: ['committee@university.example']
+  });
+  assert.ok(result.email);
+  assert.deepEqual(privacy.finalSafetyScan(JSON.stringify(result.email)), []);
+  assert.throws(
+    () => privacy.validateOutboundEmail({ subject: 'safe', sender_type: 'external', preview: '주소: 서울시 종로구 종로 1' }),
+    /Privacy safety scan blocked: address/
+  );
+});
+
 test('patient procedure schedules and admission rosters are locked before transmission', () => {
   const titleOnly = privacy.prepareOutbound({
     subject: '9월23일 중재 시술 스케줄 보내드립니다 (입원대기 우선순위명단 포함)',
@@ -159,7 +174,7 @@ test('manifest permissions are unchanged and privacy helper loads before content
   assert.deepEqual(manifest.host_permissions, ['https://mail.google.com/*', 'https://api.typesafe.ai/*']);
   assert.deepEqual(manifest.content_scripts[0].js, ['privacy.js', 'content.js']);
   const content = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
-  assert.match(content, /CACHE_SCHEMA = 4/);
+  assert.match(content, /CACHE_SCHEMA = 5/);
   assert.match(content, /cacheSchema === CACHE_SCHEMA/);
   assert.match(content, /function extensionAlive\(\)/);
   assert.match(content, /function safeStorageSet\(values\)/);

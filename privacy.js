@@ -98,6 +98,9 @@
   }
 
   function finalSafetyScan(value = '') {
+    // Masking labels are proof of local redaction, not new sensitive content.
+    // Without this normalization, "[주소] 서울대학교" can be mistaken for a raw address.
+    const scanValue = String(value).replace(/\[(?:이메일|전화|생년월일|주민번호|카드번호|여권번호|환자ID|계좌정보|인증정보|번호|주소|가림)\]/g, '[MASKED]');
     const findings = [];
     const checks = [
       ['email', EMAIL_RE], ['phone', PHONE_RE], ['resident_number', RRN_RE],
@@ -105,7 +108,7 @@
       ['address', ADDRESS_RE], ['address', ADDRESS_WORD_RE], ['patient_id', PATIENT_ID_RE],
       ['long_number', LONG_NUMBER_RE]
     ];
-    for (const [name, re] of checks) if (test(re, value)) findings.push(name);
+    for (const [name, re] of checks) if (test(re, scanValue)) findings.push(name);
     return [...new Set(findings)];
   }
 
