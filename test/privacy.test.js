@@ -151,4 +151,6 @@ test('manifest permissions are unchanged and privacy helper loads before content
   const content = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
   assert.match(content, /CACHE_SCHEMA = 3/);
   assert.match(content, /cacheSchema === CACHE_SCHEMA/);
+  assert.match(content, /function extensionAlive\(\)/);
+  assert.match(content, /function safeStorageSet\(values\)/);
 });

@@ -62,6 +62,18 @@
   // ---------- helpers ----------
   const accountIndex = () => (location.pathname.match(/\/mail\/u\/(\d+)/) || [, '0'])[1];
 
+  function extensionAlive() {
+    try { return !!chrome.runtime?.id; } catch (_) { return false; }
+  }
+
+  function safeStorageSet(values) {
+    if (!extensionAlive()) return;
+    try {
+      const pending = chrome.storage.local.set(values);
+      if (pending?.catch) pending.catch(() => {});
+    } catch (_) { /* An extension reload invalidates the old content-script context. */ }
+  }
+
   function parseRowDate(tr) {
     const t = tr.querySelector('td.xW span[title]')?.getAttribute('title') || '';
     let m = t.match(/(\d{4})년\s*(\d+)월\s*(\d+)일.*?(오전|오후)\s*(\d+):(\d+)/);
@@ -175,19 +187,20 @@
       if (prepared.excluded) {
         // Fail closed: sensitive content and any post-masking safety finding stay local.
         memCache[info.key] = { excluded: prepared.excluded, excludedDetail: prepared.excludedDetail, findings: prepared.findings, cacheSchema: CACHE_SCHEMA, t: Date.now() };
-        chrome.storage.local.set({ [info.key]: memCache[info.key] });
+        safeStorageSet({ [info.key]: memCache[info.key] });
         refreshRowsFor(info.key, memCache[info.key]);
         return;
       }
+      if (!extensionAlive()) return;
       const res = await chrome.runtime.sendMessage({ type: 'jev-score', email: prepared.email });
       if (!res?.ok) throw new Error(res?.error || 'no response');
       const data = { ...score(res), cacheSchema: CACHE_SCHEMA, t: Date.now() };
       memCache[info.key] = data;
-      chrome.storage.local.set({ [info.key]: data });
+      safeStorageSet({ [info.key]: data });
       data.rule = info.rule;
       refreshRowsFor(info.key, data);
     } catch (e) {
-      render(info, String(e.message || e).slice(0, 150), 'err');
+      if (extensionAlive()) render(info, String(e.message || e).slice(0, 150), 'err');
     }
   }
 
@@ -200,16 +213,17 @@
 
   // ---------- main scan ----------
   async function scan() {
-    if (!enabled) return;
+    if (!enabled || !extensionAlive()) return;
     const rows = [...document.querySelectorAll('tr.zA')].filter(tr => tr.offsetParent);
     const infos = rows.map(rowInfo).filter(Boolean);
     // remember non-patient rows from any view (local only) so "later confirmation" rule works across tabs
     for (const i of infos) if (!visibleSensitiveFinding(i)) seen[i.tid] = { subject: i.subject, snippet: i.snippet.slice(0, 300), when: i.when };
     clearTimeout(seenTimer);
     seenTimer = setTimeout(() => {
+      if (!extensionAlive()) return;
       const entries = Object.entries(seen).sort((a, b) => (b[1].when || 0) - (a[1].when || 0)).slice(0, 600);
       seen = Object.fromEntries(entries);
-      chrome.storage.local.set({ __jev_seen: seen });
+      safeStorageSet({ __jev_seen: seen });
     }, 2000);
     if (!inPrimaryInbox() || !configured) return;
     ensureStyle();
