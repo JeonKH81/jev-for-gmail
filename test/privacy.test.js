@@ -11,7 +11,7 @@ test('patient name and email are fail-closed and never prepared for transmission
     threadText: 'From: 김민준 <patient@example.com>\n등록번호: P-123456\n검사 결과입니다.',
     senderEmails: ['ward@hospital.example']
   });
-  assert.deepEqual(result, { excluded: 'patient' });
+  assert.deepEqual(result, { excluded: 'patient', excludedDetail: 'patient_id' });
 });
 
 test('ordinary society mail is transmitted with header names and emails removed', () => {
@@ -69,7 +69,48 @@ test('high-confidence account number remains fail-closed', () => {
     subject: '계좌 확인',
     threadText: '입금 계좌: 123-456-789012'
   });
-  assert.deepEqual(result, { excluded: 'personal' });
+  assert.deepEqual(result, { excluded: 'personal', excludedDetail: 'account_number' });
+});
+
+test('common hospital and society mail signatures do not cause false locks', () => {
+  const fixtures = [
+    {
+      subject: '교수간담회 보고자료 송부드립니다',
+      body: '보고자료를 송부드리오니 참고 바랍니다.\nT. 031-787-1107\nE. staff@hospital.example\nA. 13620 경기도 성남시 분당구 구미로 173번길 82'
+    },
+    {
+      subject: '모니터링 시스템 가입 요청드립니다',
+      body: '시스템 가입과 수련지도 실적 입력을 요청드립니다.\n받는사람: User One <one@hospital.example>, User Two <two@hospital.example>\nT. 031-787-1227'
+    },
+    {
+      subject: 'PRN 처방 관련 협조 요청드립니다',
+      body: '환자 안전을 위하여 기준에 부합하도록 오더 발행 부탁드립니다.\nT. +82-31-787-6929\nE. ward@hospital.example'
+    },
+    {
+      subject: '국제학술대회 Faculty 초청',
+      body: '역할 확인 및 수락을 부탁드립니다.\n학회 홈페이지 ID : member01\n비밀번호를 잊으셨나요? 비밀번호 찾기\nTel: 02-582-8208\nE-mail: office@society.example'
+    }
+  ];
+  for (const fixture of fixtures) {
+    const result = privacy.prepareOutbound({
+      subject: fixture.subject,
+      threadText: fixture.body,
+      senderEmails: ['staff@example.org']
+    });
+    assert.ok(result.email, fixture.subject);
+    assert.deepEqual(privacy.finalSafetyScan(JSON.stringify(result.email)), [], fixture.subject);
+    assert.doesNotMatch(JSON.stringify(result.email), /@|\+82-31-787-6929|031-787-1107/, fixture.subject);
+  }
+});
+
+test('configured sender lock reports an actionable reason', () => {
+  const result = privacy.prepareOutbound({
+    subject: '일반 안내',
+    snippet: '내용',
+    senderEmails: ['staff@hospital.example'],
+    patientSenders: ['@hospital.example']
+  });
+  assert.deepEqual(result, { excluded: 'patient', excludedDetail: 'configured_sender' });
 });
 
 test('masking covers email in both title and body and safety boundary rejects leftovers', () => {
@@ -93,4 +134,7 @@ test('manifest permissions are unchanged and privacy helper loads before content
   assert.deepEqual(manifest.permissions, ['storage']);
   assert.deepEqual(manifest.host_permissions, ['https://mail.google.com/*', 'https://api.typesafe.ai/*']);
   assert.deepEqual(manifest.content_scripts[0].js, ['privacy.js', 'content.js']);
+  const content = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
+  assert.match(content, /CACHE_SCHEMA = 2/);
+  assert.match(content, /cacheSchema === CACHE_SCHEMA/);
 });

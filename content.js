@@ -4,16 +4,29 @@
   const MAX_AGE_DAYS = 7;          // score only mails whose latest message is within N days
   const CONCURRENCY = 4;
   const CACHE_TTL_DAYS = 30;
+  const CACHE_SCHEMA = 2;          // privacy rule changes must not reuse older lock decisions
   const W = { act: 0.4, urg: 0.3, imp: 0.3, doneDiscount: 0.6 };
   const CAT_KO = { patient_care: '환자', research_manuscript: '연구/원고', irb_regulatory: 'IRB/규제', hospital_admin: '병원행정', academic_society: '학회', personal_finance: '개인/금융', newsletter_marketing: '광고/뉴스레터' };
-  const { classifySensitive, prepareOutbound } = JevPrivacy;
+  const { sensitiveFinding, prepareOutbound } = JevPrivacy;
+  const LOCK_REASON_KO = {
+    configured_sender: '설정에서 제외한 발신자 또는 도메인',
+    patient_id: '명시된 환자 ID',
+    patient_name: '명시된 환자명',
+    resident_number: '주민등록번호',
+    card_number: '카드번호',
+    account_number: '실제 계좌번호',
+    passport_number: '여권번호',
+    authentication_secret: '인증번호 또는 보안코드',
+    final_safety_scan: 'masking 후 최종 안전 검사 미통과'
+  };
 
   // ---- Patient-related mail: never fetched, never sent to Jev ----
   let PATIENT_SENDERS = [];   // set per user in the options page
   let SELF_EMAILS = [];       // local-only: used to replace thread headers with [SELF]
+  let privacyConfigFingerprint = 'default';
   let configured = false;
-  function isPatientRelated(info) {   // returns 'patient' | 'personal' | null
-    return classifySensitive({ subject: info.subject, snippet: info.snippet, senderEmails: info.senderEmails, patientSenders: PATIENT_SENDERS });
+  function visibleSensitiveFinding(info) {
+    return sensitiveFinding({ subject: info.subject, snippet: info.snippet, senderEmails: info.senderEmails, patientSenders: PATIENT_SENDERS });
   }
 
   // Only the Inbox "기본/Primary" tab (or inbox without category tabs)
@@ -94,7 +107,7 @@
     const senderEls = [...tr.querySelectorAll('span[email]')];
     const senderEmails = [...new Set(senderEls.map(e => (e.getAttribute('email') || '').toLowerCase()))];
     const when = parseRowDate(tr) || (legacy ? parseInt(legacy.slice(0, 11), 16) : null);
-    const key = tid + '|' + hash(snippet + '|' + (tr.querySelector('td.xW span[title]')?.getAttribute('title') || ''));
+    const key = '#jev|' + tid + '|' + hash(snippet + '|' + (tr.querySelector('td.xW span[title]')?.getAttribute('title') || '')) + '|p' + CACHE_SCHEMA + '|' + privacyConfigFingerprint;
     return { tr, tid, legacy, subject, snippet, senderEmails, when, key };
   }
 
@@ -122,7 +135,12 @@
     if (!cell) return;
     if (!b) { b = document.createElement('span'); cell.prepend(b); }
     if (state === 'wait') { b.className = 'jev-badge jev-wait'; b.textContent = '…'; b.title = 'Jev 채점 중'; return; }
-    if (data && data.excluded) { b.className = 'jev-badge jev-min'; b.textContent = '🔒'; b.title = data.excluded === 'personal' ? '개인정보(주민번호·계좌·주소·카드 등)가 있는 메일로 판단: Jev에 보내지 않음' : '환자 관련 메일로 판단: Jev에 보내지 않음'; return; }
+    if (data && data.excluded) {
+      const reason = LOCK_REASON_KO[data.excludedDetail] || (data.excluded === 'personal' ? '고위험 개인정보' : '환자 관련 고위험 정보');
+      b.className = 'jev-badge jev-min'; b.textContent = '🔒';
+      b.title = `Jev에 보내지 않음\n잠금 원인: ${reason}`;
+      return;
+    }
     if (state === 'err') { b.className = 'jev-badge jev-err'; b.textContent = '!'; b.title = 'Jev 오류: ' + data; return; }
     const done = data.rule ? Math.max(data.doneJev, 0.95) : data.doneJev;
     const p = data.base * (1 - W.doneDiscount * done);
@@ -155,14 +173,14 @@
       });
       if (prepared.excluded) {
         // Fail closed: sensitive content and any post-masking safety finding stay local.
-        memCache[info.key] = { excluded: prepared.excluded, t: Date.now() };
+        memCache[info.key] = { excluded: prepared.excluded, excludedDetail: prepared.excludedDetail, findings: prepared.findings, cacheSchema: CACHE_SCHEMA, t: Date.now() };
         chrome.storage.local.set({ [info.key]: memCache[info.key] });
         refreshRowsFor(info.key, memCache[info.key]);
         return;
       }
       const res = await chrome.runtime.sendMessage({ type: 'jev-score', email: prepared.email });
       if (!res?.ok) throw new Error(res?.error || 'no response');
-      const data = { ...score(res), t: Date.now() };
+      const data = { ...score(res), cacheSchema: CACHE_SCHEMA, t: Date.now() };
       memCache[info.key] = data;
       chrome.storage.local.set({ [info.key]: data });
       data.rule = info.rule;
@@ -185,7 +203,7 @@
     const rows = [...document.querySelectorAll('tr.zA')].filter(tr => tr.offsetParent);
     const infos = rows.map(rowInfo).filter(Boolean);
     // remember non-patient rows from any view (local only) so "later confirmation" rule works across tabs
-    for (const i of infos) if (!isPatientRelated(i)) seen[i.tid] = { subject: i.subject, snippet: i.snippet.slice(0, 300), when: i.when };
+    for (const i of infos) if (!visibleSensitiveFinding(i)) seen[i.tid] = { subject: i.subject, snippet: i.snippet.slice(0, 300), when: i.when };
     clearTimeout(seenTimer);
     seenTimer = setTimeout(() => {
       const entries = Object.entries(seen).sort((a, b) => (b[1].when || 0) - (a[1].when || 0)).slice(0, 600);
@@ -198,10 +216,10 @@
     const need = infos.filter(i => !memCache[i.key]).map(i => i.key);
     if (need.length) Object.assign(memCache, await chrome.storage.local.get(need));
     for (const info of infos) {
-      const why = isPatientRelated(info);
-      if (why) { render(info, { excluded: why }); continue; }
+      const finding = visibleSensitiveFinding(info);
+      if (finding) { render(info, finding); continue; }
       info.rule = confirmedLater(info, infos);
-      const cached = memCache[info.key];
+      const cached = memCache[info.key]?.cacheSchema === CACHE_SCHEMA ? memCache[info.key] : null;
       if (cached) { render(info, { ...cached, rule: info.rule }); continue; }
       if (info.when && info.when < cutoff) continue;
       if (inflight.has(info.key)) continue;
@@ -222,6 +240,7 @@
     configured = !!cfg.apiKey;
     PATIENT_SENDERS = (cfg.patientSenders || []).map(x => x.toLowerCase().trim()).filter(Boolean);
     SELF_EMAILS = (cfg.recipientEmails || []).map(x => x.toLowerCase().trim()).filter(Boolean);
+    privacyConfigFingerprint = hash(JSON.stringify([PATIENT_SENDERS.slice().sort(), SELF_EMAILS.slice().sort(), cfg.recipientRole || '']));
   }
   chrome.storage.local.get(['__jev_enabled', '__jev_seen', '__jev_cfg']).then(v => { enabled = v.__jev_enabled !== false; seen = v.__jev_seen || {}; applyCfg(v.__jev_cfg); scan(); });
   chrome.storage.onChanged.addListener(ch => {
@@ -230,6 +249,11 @@
       enabled = ch.__jev_enabled.newValue !== false;
       if (!enabled) document.querySelectorAll('.jev-badge').forEach(b => b.remove()); else scan();
     }
+    let removedCache = false;
+    for (const [key, change] of Object.entries(ch)) {
+      if (key.startsWith('#') && change.newValue === undefined) { delete memCache[key]; removedCache = true; }
+    }
+    if (removedCache) scan();
   });
 
   let timer = null;
