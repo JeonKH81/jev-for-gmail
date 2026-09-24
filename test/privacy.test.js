@@ -89,6 +89,26 @@ test('masking placeholders are not mistaken for remaining sensitive data', () =>
   );
 });
 
+test('actual login credentials lock while unrelated 13-digit filenames do not', () => {
+  const harmless = privacy.prepareOutbound({
+    subject: '회의자료 공유',
+    threadText: '첨부 이미지: 1787543723165.png\n회의 일정을 확인해 주세요.'
+  });
+  assert.ok(harmless.email);
+
+  const credential = privacy.prepareOutbound({
+    subject: '시스템 접속 안내',
+    threadText: '아이디: demo-user\n비밀번호: temporary-pass-123'
+  });
+  assert.deepEqual(credential, { excluded: 'personal', excludedDetail: 'login_credential' });
+
+  const residentNumber = privacy.prepareOutbound({
+    subject: '본인 확인',
+    threadText: '주민등록번호: 000101-3000008'
+  });
+  assert.deepEqual(residentNumber, { excluded: 'personal', excludedDetail: 'resident_number' });
+});
+
 test('patient procedure schedules and admission rosters are locked before transmission', () => {
   const titleOnly = privacy.prepareOutbound({
     subject: '9월23일 중재 시술 스케줄 보내드립니다 (입원대기 우선순위명단 포함)',
@@ -174,7 +194,7 @@ test('manifest permissions are unchanged and privacy helper loads before content
   assert.deepEqual(manifest.host_permissions, ['https://mail.google.com/*', 'https://api.typesafe.ai/*']);
   assert.deepEqual(manifest.content_scripts[0].js, ['privacy.js', 'content.js']);
   const content = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
-  assert.match(content, /CACHE_SCHEMA = 5/);
+  assert.match(content, /CACHE_SCHEMA = 6/);
   assert.match(content, /cacheSchema === CACHE_SCHEMA/);
   assert.match(content, /function extensionAlive\(\)/);
   assert.match(content, /function safeStorageSet\(values\)/);

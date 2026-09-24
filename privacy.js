@@ -18,6 +18,7 @@
   const ADDRESS_RE = /(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주)\S*\s+\S+(?:시|군|구)\s+[^\n,]{0,40}?(?:로|길)\s*\d+(?:번길\s*\d+)?(?:\s*\([^)\n]{0,20}\))?/g;
   const ADDRESS_WORD_RE = /(주소|자택|배송지|거주지|우편\s*번호|address)\s*[:：]?[^\n]{0,40}(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주)/gi;
   const SECRET_RE = /((?:비밀\s*번호|password|PW|pw|ID|아이디)\s*[:：]\s*)\S+/g;
+  const LOGIN_CREDENTIAL_RE = /(?:비밀\s*번호|패스워드|password|PW|pw)\s*[:：]\s*\S+/gi;
   const AUTH_SECRET_RE = /(?:OTP|인증\s*번호|보안\s*코드)\s*[:：#-]?\s*\d{4,8}/gi;
   const STRUCTURED_NUMBER_RE = /\b(?!(?:19|20)\d{2}-\d{1,2}-\d{1,2}\b)\d{2,6}-\d{2,6}-\d{2,8}(?:-\d{1,4})?\b/g;
 
@@ -28,6 +29,23 @@
 
   const test = (re, value) => { re.lastIndex = 0; return re.test(value || ''); };
   const domains = emails => (emails || []).map(x => String(x).toLowerCase().split('@')[1]).filter(Boolean);
+
+  function hasValidResidentNumber(value = '') {
+    RRN_RE.lastIndex = 0;
+    for (const match of String(value).matchAll(RRN_RE)) {
+      const digits = match[0].replace(/[- ]/g, '');
+      const century = /[12]/.test(digits[6]) ? 1900 : 2000;
+      const year = century + Number(digits.slice(0, 2));
+      const month = Number(digits.slice(2, 4));
+      const day = Number(digits.slice(4, 6));
+      const date = new Date(year, month - 1, day);
+      if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) continue;
+      const weights = [2, 3, 4, 5, 6, 7, 8, 9, 2, 3, 4, 5];
+      const sum = weights.reduce((total, weight, i) => total + Number(digits[i]) * weight, 0);
+      if ((11 - (sum % 11)) % 10 === Number(digits[12])) return true;
+    }
+    return false;
+  }
 
   function sensitiveFinding({ subject = '', snippet = '', threadText = '', senderEmails = [], patientSenders = [] }) {
     const normalizedSenders = senderEmails.map(x => String(x).toLowerCase());
@@ -47,8 +65,10 @@
     }
     // Lock only high-confidence values. Ordinary words such as "외래", "입금",
     // "participant", or "주소" are not sufficient by themselves.
+    if (hasValidResidentNumber(all)) return { excluded: 'personal', excludedDetail: 'resident_number' };
+    if (test(LOGIN_CREDENTIAL_RE, all)) return { excluded: 'personal', excludedDetail: 'login_credential' };
     const personalChecks = [
-      ['resident_number', RRN_RE], ['card_number', CARD_RE], ['account_number', ACCOUNT_RE],
+      ['card_number', CARD_RE], ['account_number', ACCOUNT_RE],
       ['passport_number', PASSPORT_RE], ['authentication_secret', AUTH_SECRET_RE]
     ];
     for (const [excludedDetail, re] of personalChecks) {

@@ -4,7 +4,7 @@
   const MAX_AGE_DAYS = 7;          // score only mails whose latest message is within N days
   const CONCURRENCY = 4;
   const CACHE_TTL_DAYS = 30;
-  const CACHE_SCHEMA = 5;          // privacy rule changes must not reuse older decisions
+  const CACHE_SCHEMA = 6;          // privacy rule changes must not reuse older decisions
   const W = { act: 0.4, urg: 0.3, imp: 0.3, doneDiscount: 0.6 };
   const CAT_KO = { patient_care: '환자', research_manuscript: '연구/원고', irb_regulatory: 'IRB/규제', hospital_admin: '병원행정', academic_society: '학회', personal_finance: '개인/금융', newsletter_marketing: '광고/뉴스레터' };
   const { sensitiveFinding, prepareOutbound } = JevPrivacy;
@@ -18,6 +18,7 @@
     account_number: '실제 계좌번호',
     passport_number: '여권번호',
     authentication_secret: '인증번호 또는 보안코드',
+    login_credential: '실제 로그인 비밀번호 또는 자격정보',
     final_safety_scan: 'masking 후 최종 안전 검사 미통과'
   };
 
