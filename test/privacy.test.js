@@ -45,11 +45,29 @@ test('research deadline mail keeps latest useful text within 2,500 characters', 
   assert.doesNotMatch(result.email.thread_text, /Editor Name|editor@journal\.example/);
 });
 
-test('financial and address mail is fail-closed', () => {
+test('ordinary financial and address words are masked instead of locked', () => {
   const result = privacy.prepareOutbound({
     subject: '계좌 및 배송지 확인',
     snippet: '입금 계좌와 주소를 확인하세요',
-    threadText: '계좌 123-456-789012, 주소: 서울특별시 중구 세종대로 110'
+    threadText: '문의 finance@example.com, 전화 010-1234-5678, 주소: 서울특별시 중구 세종대로 110'
+  });
+  assert.ok(result.email);
+  assert.match(result.email.thread_text, /\[이메일\]/);
+  assert.match(result.email.thread_text, /\[전화\]/);
+  assert.match(result.email.thread_text, /\[주소\]/);
+});
+
+test('patient and finance keywords alone do not lock routine work mail', () => {
+  for (const message of ['외래 일정 안내', '연구 participant 모집 공고', '입금 절차 안내']) {
+    const result = privacy.prepareOutbound({ subject: message, snippet: '일반 안내 메일입니다.' });
+    assert.ok(result.email, message);
+  }
+});
+
+test('high-confidence account number remains fail-closed', () => {
+  const result = privacy.prepareOutbound({
+    subject: '계좌 확인',
+    threadText: '입금 계좌: 123-456-789012'
   });
   assert.deepEqual(result, { excluded: 'personal' });
 });
