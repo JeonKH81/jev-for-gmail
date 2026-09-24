@@ -23,6 +23,7 @@
 
   const LABELED_PATIENT_NAME_RE = /(?:환자\s*(?:명|이름)|patient\s*name)\s*[:：]\s*(?:[가-힣]{2,4}|[A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,2})/gi;
   const CLINICAL_PATIENT_NAME_RE = /환자\s+[가-힣]{2,4}(?:님)?\s+(?:검사|진료|입원|퇴원|시술|수술|처방|예약|결과)/g;
+  const PATIENT_SCHEDULE_RE = /(?:중재\s*)?시술\s*(?:스케줄|일정)|수술\s*(?:스케줄|일정)|입원\s*(?:대기|예정)?.{0,12}(?:우선\s*순위\s*)?(?:명단|목록)|환자\s*(?:명단|목록)/i;
   const HEADER_RE = /^\s*(from|to|cc|bcc|reply-to|sender|보낸\s*사람|받는\s*사람|참조|숨은\s*참조|회신\s*주소|발신|수신)\s*[:：].*$/gim;
 
   const test = (re, value) => { re.lastIndex = 0; return re.test(value || ''); };
@@ -36,6 +37,10 @@
     }
     const visible = `${subject}\n${snippet}`;
     const all = `${visible}\n${threadText}`;
+    if (PATIENT_SCHEDULE_RE.test(all)) return { excluded: 'patient', excludedDetail: 'patient_schedule_or_roster' };
+    if (/등록번호/i.test(all) && /생년월일/i.test(all) && /(?:진단명|검사명|시술명)/i.test(all)) {
+      return { excluded: 'patient', excludedDetail: 'patient_schedule_or_roster' };
+    }
     if (test(PATIENT_ID_RE, all)) return { excluded: 'patient', excludedDetail: 'patient_id' };
     if ([LABELED_PATIENT_NAME_RE, CLINICAL_PATIENT_NAME_RE].some(re => test(re, all))) {
       return { excluded: 'patient', excludedDetail: 'patient_name' };

@@ -4,12 +4,13 @@
   const MAX_AGE_DAYS = 7;          // score only mails whose latest message is within N days
   const CONCURRENCY = 4;
   const CACHE_TTL_DAYS = 30;
-  const CACHE_SCHEMA = 2;          // privacy rule changes must not reuse older lock decisions
+  const CACHE_SCHEMA = 3;          // privacy rule changes must not reuse older decisions
   const W = { act: 0.4, urg: 0.3, imp: 0.3, doneDiscount: 0.6 };
   const CAT_KO = { patient_care: '환자', research_manuscript: '연구/원고', irb_regulatory: 'IRB/규제', hospital_admin: '병원행정', academic_society: '학회', personal_finance: '개인/금융', newsletter_marketing: '광고/뉴스레터' };
   const { sensitiveFinding, prepareOutbound } = JevPrivacy;
   const LOCK_REASON_KO = {
     configured_sender: '설정에서 제외한 발신자 또는 도메인',
+    patient_schedule_or_roster: '환자 시술 일정 또는 입원·환자 명단',
     patient_id: '명시된 환자 ID',
     patient_name: '명시된 환자명',
     resident_number: '주민등록번호',

@@ -64,6 +64,20 @@ test('patient and finance keywords alone do not lock routine work mail', () => {
   }
 });
 
+test('patient procedure schedules and admission rosters are locked before transmission', () => {
+  const titleOnly = privacy.prepareOutbound({
+    subject: '9월23일 중재 시술 스케줄 보내드립니다 (입원대기 우선순위명단 포함)',
+    snippet: '첨부파일을 확인해 주세요'
+  });
+  assert.deepEqual(titleOnly, { excluded: 'patient', excludedDetail: 'patient_schedule_or_roster' });
+
+  const tableOnly = privacy.prepareOutbound({
+    subject: '업무 자료',
+    threadText: '등록번호 이름 생년월일 성별 검사명 발행처 지정의 진단명\n12345678 가명 1950-01-01 M CAG 병동 담당의 CAD'
+  });
+  assert.deepEqual(tableOnly, { excluded: 'patient', excludedDetail: 'patient_schedule_or_roster' });
+});
+
 test('high-confidence account number remains fail-closed', () => {
   const result = privacy.prepareOutbound({
     subject: '계좌 확인',
@@ -135,6 +149,6 @@ test('manifest permissions are unchanged and privacy helper loads before content
   assert.deepEqual(manifest.host_permissions, ['https://mail.google.com/*', 'https://api.typesafe.ai/*']);
   assert.deepEqual(manifest.content_scripts[0].js, ['privacy.js', 'content.js']);
   const content = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
-  assert.match(content, /CACHE_SCHEMA = 2/);
+  assert.match(content, /CACHE_SCHEMA = 3/);
   assert.match(content, /cacheSchema === CACHE_SCHEMA/);
 });
