@@ -7,7 +7,7 @@
 })(typeof globalThis !== 'undefined' ? globalThis : this, () => {
   const MAX_EXTERNAL_TEXT = 2500;
   const EMAIL_RE = /\b[A-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?(?:\.[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?)+\b/gi;
-  const PHONE_RE = /(?<!\d)(?:\+?82[- .]?)?0(?:1\d|2|[3-6]\d)[- .)]?\d{3,4}[- .]?\d{4}(?!\d)/g;
+  const PHONE_RE = /(?<!\d)(?:\+?82[- .]?)?0?(?:1\d|2|[3-6]\d)[- .)]?\d{3,4}[- .]?\d{4}(?!\d)/g;
   const RRN_RE = /\b\d{6}[- ]?[1-4]\d{6}\b/g;
   const CARD_RE = /\b(?:\d{4}[- ]?){3}\d{4}\b/g;
   const ACCOUNT_RE = /(계좌|은행|입금|예금주|통장|account)[^\n]{0,40}\d[\d-]{8,}\d/gi;
@@ -28,17 +28,32 @@
   const test = (re, value) => { re.lastIndex = 0; return re.test(value || ''); };
   const domains = emails => (emails || []).map(x => String(x).toLowerCase().split('@')[1]).filter(Boolean);
 
-  function classifySensitive({ subject = '', snippet = '', threadText = '', senderEmails = [], patientSenders = [] }) {
+  function sensitiveFinding({ subject = '', snippet = '', threadText = '', senderEmails = [], patientSenders = [] }) {
     const normalizedSenders = senderEmails.map(x => String(x).toLowerCase());
     const normalizedRules = patientSenders.map(x => String(x).toLowerCase().trim()).filter(Boolean);
-    if (normalizedSenders.some(email => normalizedRules.some(rule => rule.startsWith('@') ? email.endsWith(rule) : email === rule))) return 'patient';
+    if (normalizedSenders.some(email => normalizedRules.some(rule => rule.startsWith('@') ? email.endsWith(rule) : email === rule))) {
+      return { excluded: 'patient', excludedDetail: 'configured_sender' };
+    }
     const visible = `${subject}\n${snippet}`;
     const all = `${visible}\n${threadText}`;
-    if ([PATIENT_ID_RE, LABELED_PATIENT_NAME_RE, CLINICAL_PATIENT_NAME_RE].some(re => test(re, all))) return 'patient';
+    if (test(PATIENT_ID_RE, all)) return { excluded: 'patient', excludedDetail: 'patient_id' };
+    if ([LABELED_PATIENT_NAME_RE, CLINICAL_PATIENT_NAME_RE].some(re => test(re, all))) {
+      return { excluded: 'patient', excludedDetail: 'patient_name' };
+    }
     // Lock only high-confidence values. Ordinary words such as "외래", "입금",
     // "participant", or "주소" are not sufficient by themselves.
-    if ([RRN_RE, CARD_RE, ACCOUNT_RE, PASSPORT_RE, AUTH_SECRET_RE].some(re => test(re, all))) return 'personal';
+    const personalChecks = [
+      ['resident_number', RRN_RE], ['card_number', CARD_RE], ['account_number', ACCOUNT_RE],
+      ['passport_number', PASSPORT_RE], ['authentication_secret', AUTH_SECRET_RE]
+    ];
+    for (const [excludedDetail, re] of personalChecks) {
+      if (test(re, all)) return { excluded: 'personal', excludedDetail };
+    }
     return null;
+  }
+
+  function classifySensitive(input) {
+    return sensitiveFinding(input)?.excluded || null;
   }
 
   function maskIds(value = '') {
@@ -90,8 +105,8 @@
   }
 
   function prepareOutbound({ subject = '', snippet = '', threadText = null, senderEmails = [], selfEmails = [], patientSenders = [] }) {
-    const reason = classifySensitive({ subject, snippet, threadText: threadText || '', senderEmails, patientSenders });
-    if (reason) return { excluded: reason };
+    const finding = sensitiveFinding({ subject, snippet, threadText: threadText || '', senderEmails, patientSenders });
+    if (finding) return finding;
     const safeSubject = maskIds(subject).slice(0, 300);
     const source = threadText == null ? snippet : threadText;
     let safeText = maskIds(stripAddressHeaders(source, selfEmails)).trim();
@@ -108,7 +123,7 @@
       [threadText == null ? 'preview' : 'thread_text']: safeText
     };
     const findings = finalSafetyScan(JSON.stringify(email));
-    return findings.length ? { excluded: 'personal', findings } : { email };
+    return findings.length ? { excluded: 'personal', excludedDetail: 'final_safety_scan', findings } : { email };
   }
 
   function validateOutboundEmail(value) {
@@ -126,5 +141,5 @@
     return clean;
   }
 
-  return { MAX_EXTERNAL_TEXT, classifySensitive, maskIds, stripAddressHeaders, senderType, finalSafetyScan, prepareOutbound, validateOutboundEmail };
+  return { MAX_EXTERNAL_TEXT, sensitiveFinding, classifySensitive, maskIds, stripAddressHeaders, senderType, finalSafetyScan, prepareOutbound, validateOutboundEmail };
 });

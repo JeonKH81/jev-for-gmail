@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Jev for Gmail",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Gmail 받은편지함(기본 탭) 각 메일 옆에 TypeSafe Jev 우선순위 점수를 표시합니다. Gmail 데이터는 변경하지 않습니다.",
   "permissions": [
     "storage"
