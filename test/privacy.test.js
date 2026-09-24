@@ -8,7 +8,7 @@ test('patient name and email are fail-closed and never prepared for transmission
   const result = privacy.prepareOutbound({
     subject: '환자 김민준 검사 결과',
     snippet: '결과를 확인해 주세요',
-    threadText: 'From: 김민준 <patient@example.com>\n등록번호: P-123456\n검사 결과입니다.',
+    threadText: 'From: 김민준 <patient@example.com>\n환자등록번호: P-123456\n검사 결과입니다.',
     senderEmails: ['ward@hospital.example']
   });
   assert.deepEqual(result, { excluded: 'patient', excludedDetail: 'patient_id' });
@@ -62,6 +62,16 @@ test('patient and finance keywords alone do not lock routine work mail', () => {
     const result = privacy.prepareOutbound({ subject: message, snippet: '일반 안내 메일입니다.' });
     assert.ok(result.email, message);
   }
+});
+
+test('business registration numbers are not mistaken for patient IDs', () => {
+  const result = privacy.prepareOutbound({
+    subject: '포인트 소멸 예정 안내',
+    threadText: '고객센터: 1544-1900\n사업자등록번호: 102-81-11670\n주소: 서울시 종로구 종로 1',
+    senderEmails: ['noreply@store.example']
+  });
+  assert.ok(result.email);
+  assert.deepEqual(privacy.finalSafetyScan(JSON.stringify(result.email)), []);
 });
 
 test('patient procedure schedules and admission rosters are locked before transmission', () => {
@@ -149,7 +159,7 @@ test('manifest permissions are unchanged and privacy helper loads before content
   assert.deepEqual(manifest.host_permissions, ['https://mail.google.com/*', 'https://api.typesafe.ai/*']);
   assert.deepEqual(manifest.content_scripts[0].js, ['privacy.js', 'content.js']);
   const content = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
-  assert.match(content, /CACHE_SCHEMA = 3/);
+  assert.match(content, /CACHE_SCHEMA = 4/);
   assert.match(content, /cacheSchema === CACHE_SCHEMA/);
   assert.match(content, /function extensionAlive\(\)/);
   assert.match(content, /function safeStorageSet\(values\)/);
