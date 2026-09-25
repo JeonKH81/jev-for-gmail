@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Jev for Gmail",
-  "version": "1.1.7",
-  "description": "Gmail 받은편지함(기본 탭) 각 메일 옆에 TypeSafe Jev 우선순위 점수를 표시합니다. Gmail 데이터는 변경하지 않습니다.",
+  "name": "__MSG_extensionName__",
+  "version": "1.2.0",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
   "permissions": [
     "storage"
   ],
@@ -27,7 +28,7 @@
   ],
   "options_page": "options.html",
   "action": {
-    "default_title": "Jev for Gmail",
+    "default_title": "__MSG_extensionName__",
     "default_popup": "popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
