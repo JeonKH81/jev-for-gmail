@@ -2,6 +2,8 @@
 
 # Jev for Gmail
 
+**한국어** | [English](README.en.md)
+
 Gmail 받은편지함의 **기본(Primary) 탭** 메일 옆에 우선순위 점수 배지를 표시하는 크롬 확장 프로그램입니다.
 점수는 [TypeSafe](https://typesafe.ai)의 **Jev** 모델이 매깁니다. Jev는 텍스트를 생성하지 않고, 정해진 질문에 확률과 점수로 답하는 모델입니다.
 
@@ -77,7 +79,8 @@ A Chrome extension that shows a priority score next to each email in Gmail's Pri
 
 | 파일 | 역할 |
 |---|---|
-| `manifest.json` | 확장 설정 (Manifest V3) |
+| `manifest.json` | 확장 설정 및 언어 선택 (Manifest V3) |
+| `_locales/ko`, `_locales/en` | 한국어·영어 화면 문구 |
 | `content.js` | Gmail 목록 읽기, 환자 메일 필터, 배지 표시 |
 | `background.js` | Jev API 호출, 질문 정의 |
 | `options.html/js` | API 키 등 설정 화면 |

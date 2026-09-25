@@ -6,20 +6,29 @@
   const CACHE_TTL_DAYS = 30;
   const CACHE_SCHEMA = 6;          // privacy rule changes must not reuse older decisions
   const W = { act: 0.4, urg: 0.3, imp: 0.3, doneDiscount: 0.6 };
-  const CAT_KO = { patient_care: '환자', research_manuscript: '연구/원고', irb_regulatory: 'IRB/규제', hospital_admin: '병원행정', academic_society: '학회', personal_finance: '개인/금융', newsletter_marketing: '광고/뉴스레터' };
+  const t = (key, substitutions) => chrome.i18n.getMessage(key, substitutions) || key;
+  const CATEGORY_MESSAGES = {
+    patient_care: 'categoryPatientCare',
+    research_manuscript: 'categoryResearchManuscript',
+    irb_regulatory: 'categoryIrbRegulatory',
+    hospital_admin: 'categoryHospitalAdmin',
+    academic_society: 'categoryAcademicSociety',
+    personal_finance: 'categoryPersonalFinance',
+    newsletter_marketing: 'categoryNewsletterMarketing'
+  };
   const { sensitiveFinding, prepareOutbound } = JevPrivacy;
-  const LOCK_REASON_KO = {
-    configured_sender: '설정에서 제외한 발신자 또는 도메인',
-    patient_schedule_or_roster: '환자 시술 일정 또는 입원·환자 명단',
-    patient_id: '명시된 환자 ID',
-    patient_name: '명시된 환자명',
-    resident_number: '주민등록번호',
-    card_number: '카드번호',
-    account_number: '실제 계좌번호',
-    passport_number: '여권번호',
-    authentication_secret: '인증번호 또는 보안코드',
-    login_credential: '실제 로그인 비밀번호 또는 자격정보',
-    final_safety_scan: 'masking 후 최종 안전 검사 미통과'
+  const LOCK_REASON_MESSAGES = {
+    configured_sender: 'reasonConfiguredSender',
+    patient_schedule_or_roster: 'reasonPatientScheduleRoster',
+    patient_id: 'reasonPatientId',
+    patient_name: 'reasonPatientName',
+    resident_number: 'reasonResidentNumber',
+    card_number: 'reasonCardNumber',
+    account_number: 'reasonAccountNumber',
+    passport_number: 'reasonPassportNumber',
+    authentication_secret: 'reasonAuthenticationSecret',
+    login_credential: 'reasonLoginCredential',
+    final_safety_scan: 'reasonFinalSafetyScan'
   };
 
   // ---- Patient-related mail: never fetched, never sent to Jev ----
@@ -148,19 +157,21 @@
     const cell = info.tr.querySelector('td.xY .xT') || info.tr.querySelector('.xT') || info.tr.querySelector('.y6');
     if (!cell) return;
     if (!b) { b = document.createElement('span'); cell.prepend(b); }
-    if (state === 'wait') { b.className = 'jev-badge jev-wait'; b.textContent = '…'; b.title = 'Jev 채점 중'; return; }
+    if (state === 'wait') { b.className = 'jev-badge jev-wait'; b.textContent = '…'; b.title = t('scoring'); return; }
     if (data && data.excluded) {
-      const reason = LOCK_REASON_KO[data.excludedDetail] || (data.excluded === 'personal' ? '고위험 개인정보' : '환자 관련 고위험 정보');
+      const reasonKey = LOCK_REASON_MESSAGES[data.excludedDetail] || (data.excluded === 'personal' ? 'reasonHighRiskPersonal' : 'reasonHighRiskPatient');
       b.className = 'jev-badge jev-min'; b.textContent = '🔒';
-      b.title = `Jev에 보내지 않음\n잠금 원인: ${reason}`;
+      b.title = `${t('notSent')}\n${t('lockReason', t(reasonKey))}`;
       return;
     }
-    if (state === 'err') { b.className = 'jev-badge jev-err'; b.textContent = '!'; b.title = 'Jev 오류: ' + data; return; }
+    if (state === 'err') { b.className = 'jev-badge jev-err'; b.textContent = '!'; b.title = t('jevError', data); return; }
     const done = data.rule ? Math.max(data.doneJev, 0.95) : data.doneJev;
     const p = data.base * (1 - W.doneDiscount * done);
     b.className = 'jev-badge ' + (p >= 0.7 ? 'jev-hi' : p >= 0.5 ? 'jev-mid' : p >= 0.3 ? 'jev-lo' : 'jev-min') + (done >= 0.6 ? ' jev-done' : '');
     b.textContent = (done >= 0.6 ? '✓ ' : '') + p.toFixed(2);
-    b.title = `Jev 우선순위 ${p.toFixed(2)}\n할 일 확률 ${data.act.toFixed(2)} · 급함 ${data.urg.toFixed(1)}/3 · 중요도 ${data.imp.toFixed(1)}/3\n이미 처리됨 ${done.toFixed(2)}${data.rule ? ' (접수확인 메일: ' + data.rule.slice(0, 40) + ')' : ''}\n분류: ${CAT_KO[data.cat] || data.cat}`;
+    const rule = data.rule ? t('confirmationRule', data.rule.slice(0, 40)) : '';
+    const category = CATEGORY_MESSAGES[data.cat] ? t(CATEGORY_MESSAGES[data.cat]) : data.cat;
+    b.title = t('priorityTooltip', [p.toFixed(2), data.act.toFixed(2), data.urg.toFixed(1), data.imp.toFixed(1), done.toFixed(2), rule, category]);
   }
 
   // ---------- queue ----------

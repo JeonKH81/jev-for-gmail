@@ -1,0 +1,89 @@
+{
+  "extensionName": { "message": "Jev for Gmail" },
+  "extensionDescription": { "message": "Shows TypeSafe Jev priority scores beside messages in Gmail's Primary inbox without modifying Gmail data." },
+  "optionsTitle": { "message": "Jev for Gmail Settings" },
+  "optionsHeading": { "message": "Jev for Gmail Settings" },
+  "optionsSubtitle": { "message": "Your API key and filter settings are stored only in this browser. Only a de-identified role and email content that passes safety checks are sent to TypeSafe." },
+  "privacyNoticeTitle": { "message": "Please note." },
+  "privacyNoticeBody": { "message": "For scoring, address headers are removed and up to 2,500 characters of the latest email content are sent to TypeSafe servers in the United States after identifiers are masked. Messages containing high-risk data, such as patient schedules or rosters, explicit patient names or IDs, resident registration numbers, card, account, passport, authentication, or login credentials, and messages that fail the final safety scan are locked (🔒) and not sent. Check your organization's privacy policy before use." },
+  "apiKeyLabel": { "message": "TypeSafe API key" },
+  "apiKeyHint": { "message": "Get one at console.typesafe.ai/keys" },
+  "recipientRoleLabel": { "message": "De-identified role" },
+  "recipientRoleHint": { "message": "Used only to assess importance, without your name or organization" },
+  "roleHealthcareResearch": { "message": "Healthcare professional and clinical researcher" },
+  "roleHealthcare": { "message": "Healthcare professional" },
+  "roleResearch": { "message": "Researcher" },
+  "roleAcademicAdmin": { "message": "Academic or institutional administrator" },
+  "roleGeneralProfessional": { "message": "General professional" },
+  "selfEmailsLabel": { "message": "My email addresses" },
+  "selfEmailsHint": { "message": "Comma-separated. Used only in this browser to replace your replies with [SELF]; never sent to TypeSafe" },
+  "patientSendersLabel": { "message": "Patient-related senders (exclude)" },
+  "patientSendersHint": { "message": "Comma or line separated. All messages from listed senders are locked. Use “@domain” carefully because it locks the entire domain." },
+  "saveButton": { "message": "Save" },
+  "testButton": { "message": "Test connection" },
+  "apiKeyRequired": { "message": "Enter your API key." },
+  "settingsSaved": { "message": "Saved. Refresh Gmail to apply the changes." },
+  "testingConnection": { "message": "Testing..." },
+  "connectionSuccess": {
+    "message": "Connected ($MODEL$). Action probability for the test sentence: $SCORE$",
+    "placeholders": { "model": { "content": "$1" }, "score": { "content": "$2" } }
+  },
+  "connectionFailed": {
+    "message": "Failed: $ERROR$ (make sure you saved first)",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "noResponse": { "message": "No response" },
+  "showBadges": { "message": "Show score badges" },
+  "popupSummary": { "message": "Primary inbox · last 7 days · high-risk private email is locked 🔒 · identifiers masked · Gmail data is never changed" },
+  "clearCacheButton": { "message": "Clear score cache (rescore)" },
+  "settingsButton": { "message": "Settings (API key, etc.)" },
+  "cacheCleared": {
+    "message": "Cleared $COUNT$ cached scores. Refresh Gmail to rescore.",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "configureApiKeyFirst": { "message": "Enter your TypeSafe API key in Settings first." },
+  "scoring": { "message": "Jev is scoring this message" },
+  "notSent": { "message": "Not sent to Jev" },
+  "lockReason": {
+    "message": "Lock reason: $REASON$",
+    "placeholders": { "reason": { "content": "$1" } }
+  },
+  "jevError": {
+    "message": "Jev error: $ERROR$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "priorityTooltip": {
+    "message": "Jev priority $PRIORITY$\nAction probability $ACTION$ · Urgency $URGENCY$/3 · Importance $IMPORTANCE$/3\nAlready handled $HANDLED$$RULE$\nCategory: $CATEGORY$",
+    "placeholders": {
+      "priority": { "content": "$1" }, "action": { "content": "$2" }, "urgency": { "content": "$3" },
+      "importance": { "content": "$4" }, "handled": { "content": "$5" }, "rule": { "content": "$6" }, "category": { "content": "$7" }
+    }
+  },
+  "confirmationRule": {
+    "message": " (confirmation email: $SUBJECT$)",
+    "placeholders": { "subject": { "content": "$1" } }
+  },
+  "categoryPatientCare": { "message": "Patient care" },
+  "categoryResearchManuscript": { "message": "Research/manuscript" },
+  "categoryIrbRegulatory": { "message": "IRB/regulatory" },
+  "categoryHospitalAdmin": { "message": "Hospital administration" },
+  "categoryAcademicSociety": { "message": "Academic society" },
+  "categoryPersonalFinance": { "message": "Personal/finance" },
+  "categoryNewsletterMarketing": { "message": "Newsletter/marketing" },
+  "reasonConfiguredSender": { "message": "Sender or domain excluded in Settings" },
+  "reasonPatientScheduleRoster": { "message": "Patient procedure schedule, admission list, or patient roster" },
+  "reasonPatientId": { "message": "Explicit patient ID" },
+  "reasonPatientName": { "message": "Explicit patient name" },
+  "reasonResidentNumber": { "message": "Resident registration number" },
+  "reasonCardNumber": { "message": "Card number" },
+  "reasonAccountNumber": { "message": "Actual account number" },
+  "reasonPassportNumber": { "message": "Passport number" },
+  "reasonAuthenticationSecret": { "message": "Authentication code or security code" },
+  "reasonLoginCredential": { "message": "Actual login password or credential" },
+  "reasonFinalSafetyScan": { "message": "Failed the final safety scan after masking" },
+  "reasonHighRiskPersonal": { "message": "High-risk personal information" },
+  "reasonHighRiskPatient": { "message": "High-risk patient information" },
+  "backgroundMissingApiKey": { "message": "The API key is not configured. Enter it in the extension settings." },
+  "testEmailSubject": { "message": "Connection test" },
+  "testEmailPreview": { "message": "Please reply by next Wednesday." }
+}

@@ -3,6 +3,8 @@
 // it is stored only in this browser profile (chrome.storage.local).
 importScripts('privacy.js');
 
+const t = (key, substitutions) => chrome.i18n.getMessage(key, substitutions) || key;
+
 async function getCfg() {
   const { __jev_cfg } = await chrome.storage.local.get('__jev_cfg');
   return __jev_cfg || {};
@@ -76,8 +78,10 @@ const RECIPIENT_ROLES = {
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg?.type === 'jev-score' || msg?.type === 'jev-test') {
     getCfg().then(cfg => {
-      if (!cfg.apiKey) throw new Error('API 키가 설정되지 않았습니다. 확장 옵션에서 입력하세요.');
-      const candidate = msg.type === 'jev-test' ? { subject: '연결 테스트', sender_type: 'automated', preview: '다음 주 수요일까지 회신 부탁드립니다.' } : msg.email;
+      if (!cfg.apiKey) throw new Error(t('backgroundMissingApiKey'));
+      const candidate = msg.type === 'jev-test'
+        ? { subject: t('testEmailSubject'), sender_type: 'automated', preview: t('testEmailPreview') }
+        : msg.email;
       const email = JevPrivacy.validateOutboundEmail(candidate);
       const state = { recipient_role: RECIPIENT_ROLES[cfg.recipientRole] || RECIPIENT_ROLES.healthcare_research, now: nowSeoul(), email };
       return callJev(state, cfg.apiKey);

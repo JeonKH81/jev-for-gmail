@@ -1,0 +1,89 @@
+{
+  "extensionName": { "message": "Jev for Gmail" },
+  "extensionDescription": { "message": "Gmail 받은편지함(기본 탭) 각 메일 옆에 TypeSafe Jev 우선순위 점수를 표시합니다. Gmail 데이터는 변경하지 않습니다." },
+  "optionsTitle": { "message": "Jev for Gmail 설정" },
+  "optionsHeading": { "message": "Jev for Gmail 설정" },
+  "optionsSubtitle": { "message": "API 키와 필터 설정은 이 브라우저에만 저장됩니다. TypeSafe에는 비식별화된 역할과 안전 검사를 통과한 메일 내용만 전송됩니다." },
+  "privacyNoticeTitle": { "message": "알아두세요." },
+  "privacyNoticeBody": { "message": "채점할 때 주소 헤더를 제거하고 식별정보를 가린 제목과 최신 본문 최대 2,500자가 TypeSafe 서버(미국)로 전송됩니다. 환자 시술 일정·입원 명단, 명시된 환자명·환자 ID나 주민번호·카드·계좌·여권·인증·로그인 정보처럼 위험도가 높은 값이 있거나 최종 안전 검사를 통과하지 못한 메일(🔒)은 전송하지 않습니다. 기관의 개인정보 규정을 먼저 확인하세요." },
+  "apiKeyLabel": { "message": "TypeSafe API 키" },
+  "apiKeyHint": { "message": "console.typesafe.ai/keys 에서 발급" },
+  "recipientRoleLabel": { "message": "비식별 역할" },
+  "recipientRoleHint": { "message": "이름·소속 없이 중요도 판단에만 사용" },
+  "roleHealthcareResearch": { "message": "의료인·임상연구자" },
+  "roleHealthcare": { "message": "의료인" },
+  "roleResearch": { "message": "연구자" },
+  "roleAcademicAdmin": { "message": "학술·기관 행정" },
+  "roleGeneralProfessional": { "message": "일반 업무 사용자" },
+  "selfEmailsLabel": { "message": "내 이메일 주소" },
+  "selfEmailsHint": { "message": "쉼표로 구분. 브라우저 안에서 내 답장을 [SELF]로 치환할 때만 사용하며 TypeSafe로 보내지 않음" },
+  "patientSendersLabel": { "message": "환자 관련 메일 발신자 (제외)" },
+  "patientSendersHint": { "message": "쉼표/줄바꿈으로 구분. 등록한 발신자의 메일은 모두 잠깁니다. “@도메인”은 해당 기관의 모든 메일을 잠그므로 신중히 사용하세요." },
+  "saveButton": { "message": "저장" },
+  "testButton": { "message": "연결 테스트" },
+  "apiKeyRequired": { "message": "API 키를 입력하세요." },
+  "settingsSaved": { "message": "저장했습니다. Gmail을 새로고침하면 적용됩니다." },
+  "testingConnection": { "message": "테스트 중..." },
+  "connectionSuccess": {
+    "message": "연결 성공 ($MODEL$). 테스트 문장 ‘할 일’ 확률 $SCORE$",
+    "placeholders": { "model": { "content": "$1" }, "score": { "content": "$2" } }
+  },
+  "connectionFailed": {
+    "message": "실패: $ERROR$ (먼저 저장했는지 확인하세요)",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "noResponse": { "message": "응답 없음" },
+  "showBadges": { "message": "점수 배지 표시" },
+  "popupSummary": { "message": "받은편지함 기본 탭 · 최근 7일 · 고위험 개인정보 메일은 🔒 · 식별정보 가림 · Gmail 데이터는 변경하지 않음" },
+  "clearCacheButton": { "message": "점수 캐시 지우기 (다시 채점)" },
+  "settingsButton": { "message": "설정 (API 키 등)" },
+  "cacheCleared": {
+    "message": "캐시 $COUNT$개 삭제. Gmail을 새로고침하면 다시 채점합니다.",
+    "placeholders": { "count": { "content": "$1" } }
+  },
+  "configureApiKeyFirst": { "message": "먼저 설정에서 TypeSafe API 키를 입력하세요." },
+  "scoring": { "message": "Jev 채점 중" },
+  "notSent": { "message": "Jev에 보내지 않음" },
+  "lockReason": {
+    "message": "잠금 원인: $REASON$",
+    "placeholders": { "reason": { "content": "$1" } }
+  },
+  "jevError": {
+    "message": "Jev 오류: $ERROR$",
+    "placeholders": { "error": { "content": "$1" } }
+  },
+  "priorityTooltip": {
+    "message": "Jev 우선순위 $PRIORITY$\n할 일 확률 $ACTION$ · 급함 $URGENCY$/3 · 중요도 $IMPORTANCE$/3\n이미 처리됨 $HANDLED$$RULE$\n분류: $CATEGORY$",
+    "placeholders": {
+      "priority": { "content": "$1" }, "action": { "content": "$2" }, "urgency": { "content": "$3" },
+      "importance": { "content": "$4" }, "handled": { "content": "$5" }, "rule": { "content": "$6" }, "category": { "content": "$7" }
+    }
+  },
+  "confirmationRule": {
+    "message": " (접수확인 메일: $SUBJECT$)",
+    "placeholders": { "subject": { "content": "$1" } }
+  },
+  "categoryPatientCare": { "message": "환자" },
+  "categoryResearchManuscript": { "message": "연구/원고" },
+  "categoryIrbRegulatory": { "message": "IRB/규제" },
+  "categoryHospitalAdmin": { "message": "병원행정" },
+  "categoryAcademicSociety": { "message": "학회" },
+  "categoryPersonalFinance": { "message": "개인/금융" },
+  "categoryNewsletterMarketing": { "message": "광고/뉴스레터" },
+  "reasonConfiguredSender": { "message": "설정에서 제외한 발신자 또는 도메인" },
+  "reasonPatientScheduleRoster": { "message": "환자 시술 일정 또는 입원·환자 명단" },
+  "reasonPatientId": { "message": "명시된 환자 ID" },
+  "reasonPatientName": { "message": "명시된 환자명" },
+  "reasonResidentNumber": { "message": "주민등록번호" },
+  "reasonCardNumber": { "message": "카드번호" },
+  "reasonAccountNumber": { "message": "실제 계좌번호" },
+  "reasonPassportNumber": { "message": "여권번호" },
+  "reasonAuthenticationSecret": { "message": "인증번호 또는 보안코드" },
+  "reasonLoginCredential": { "message": "실제 로그인 비밀번호 또는 자격정보" },
+  "reasonFinalSafetyScan": { "message": "masking 후 최종 안전 검사 미통과" },
+  "reasonHighRiskPersonal": { "message": "고위험 개인정보" },
+  "reasonHighRiskPatient": { "message": "환자 관련 고위험 정보" },
+  "backgroundMissingApiKey": { "message": "API 키가 설정되지 않았습니다. 확장 옵션에서 입력하세요." },
+  "testEmailSubject": { "message": "연결 테스트" },
+  "testEmailPreview": { "message": "다음 주 수요일까지 회신 부탁드립니다." }
+}

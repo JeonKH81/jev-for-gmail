@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Jev for Gmail 설정</title>
+<title>Jev for Gmail Settings</title>
 <style>
   body{font:14px/1.6 -apple-system,Roboto,Arial,sans-serif;max-width:640px;margin:32px auto;color:#202124;padding:0 16px}
   h1{font-size:20px;margin-bottom:4px}
@@ -19,39 +19,39 @@
 </style>
 </head>
 <body>
-  <h1>Jev for Gmail 설정</h1>
-  <p class="sub">API 키와 필터 설정은 이 브라우저에만 저장됩니다. TypeSafe에는 비식별화된 역할과 안전 검사를 통과한 메일 내용만 전송됩니다.</p>
+  <h1 data-i18n="optionsHeading">Jev for Gmail Settings</h1>
+  <p class="sub" data-i18n="optionsSubtitle">Your API key and filter settings are stored only in this browser. Only a de-identified role and email content that passes safety checks are sent to TypeSafe.</p>
 
   <div class="warn">
-    <b>알아두세요.</b> 채점할 때 주소 헤더를 제거하고 식별정보를 가린 제목과 최신 본문 최대 2,500자가 TypeSafe 서버(미국)로 전송됩니다.
-    환자 시술 일정·입원 명단, 명시된 환자명·환자 ID나 주민번호·카드·계좌·여권번호처럼 위험도가 높은 값이 있거나 최종 안전 검사를 통과하지 못한 메일(🔒)은 전송하지 않습니다. 기관의 개인정보 규정을 먼저 확인하세요.
+    <b data-i18n="privacyNoticeTitle">Please note.</b>
+    <span data-i18n="privacyNoticeBody">For scoring, address headers are removed and up to 2,500 characters of the latest email content are sent to TypeSafe servers in the United States after identifiers are masked. High-risk messages (🔒) are not sent. Check your organization's privacy policy before use.</span>
   </div>
 
-  <label>TypeSafe API 키 <span class="hint">console.typesafe.ai/keys 에서 발급</span>
+  <label><span data-i18n="apiKeyLabel">TypeSafe API key</span> <span class="hint" data-i18n="apiKeyHint">Get one at console.typesafe.ai/keys</span>
     <input id="apiKey" type="password" autocomplete="off" placeholder="apikey_...">
   </label>
 
-  <label>비식별 역할 <span class="hint">이름·소속 없이 중요도 판단에만 사용</span>
+  <label><span data-i18n="recipientRoleLabel">De-identified role</span> <span class="hint" data-i18n="recipientRoleHint">Used only to assess importance, without your name or organization</span>
     <select id="recipientRole">
-      <option value="healthcare_research">의료인·임상연구자</option>
-      <option value="healthcare">의료인</option>
-      <option value="research">연구자</option>
-      <option value="academic_admin">학술·기관 행정</option>
-      <option value="general_professional">일반 업무 사용자</option>
+      <option value="healthcare_research" data-i18n="roleHealthcareResearch">Healthcare professional and clinical researcher</option>
+      <option value="healthcare" data-i18n="roleHealthcare">Healthcare professional</option>
+      <option value="research" data-i18n="roleResearch">Researcher</option>
+      <option value="academic_admin" data-i18n="roleAcademicAdmin">Academic or institutional administrator</option>
+      <option value="general_professional" data-i18n="roleGeneralProfessional">General professional</option>
     </select>
   </label>
 
-  <label>내 이메일 주소 <span class="hint">쉼표로 구분. 브라우저 안에서 내 답장을 [SELF]로 치환할 때만 사용하며 TypeSafe로 보내지 않음</span>
+  <label><span data-i18n="selfEmailsLabel">My email addresses</span> <span class="hint" data-i18n="selfEmailsHint">Comma-separated. Used only in this browser to replace your replies with [SELF]; never sent to TypeSafe</span>
     <input id="recipientEmails" type="text" placeholder="me@gmail.com, me@hospital.org">
   </label>
 
-  <label>환자 관련 메일 발신자 (제외) <span class="hint">쉼표/줄바꿈으로 구분. 등록한 발신자의 메일은 모두 잠깁니다. "@도메인"은 해당 기관의 모든 메일을 잠그므로 신중히 사용하세요.</span>
+  <label><span data-i18n="patientSendersLabel">Patient-related senders (exclude)</span> <span class="hint" data-i18n="patientSendersHint">Comma or line separated. All messages from listed senders are locked. Use “@domain” carefully because it locks the entire domain.</span>
     <textarea id="patientSenders" placeholder="schedule@hospital.org&#10;@ward.hospital.org"></textarea>
   </label>
 
   <div class="row">
-    <button id="save">저장</button>
-    <button id="test" class="sec">연결 테스트</button>
+    <button id="save" data-i18n="saveButton">Save</button>
+    <button id="test" class="sec" data-i18n="testButton">Test connection</button>
   </div>
   <div id="status"></div>
 
