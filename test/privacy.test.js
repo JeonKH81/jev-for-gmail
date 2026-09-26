@@ -57,6 +57,39 @@ test('ordinary financial and address words are masked instead of locked', () => 
   assert.match(result.email.thread_text, /\[주소\]/);
 });
 
+test('a society address without a street number is masked and scored', () => {
+  const result = privacy.prepareOutbound({
+    subject: '학회 Mini Webinar: 구조심질환 시술상담소 개최 안내',
+    threadText: '행사 안내와 사전 등록 링크를 확인하세요.\n주소 서울시 가상구 예시대로\n사업자등록번호: 123-45-67890',
+    senderEmails: ['events@society.example']
+  });
+  assert.ok(result.email);
+  assert.match(result.email.thread_text, /\[주소\]/);
+  assert.doesNotMatch(result.email.thread_text, /가상구|예시대로/);
+  assert.deepEqual(privacy.finalSafetyScan(JSON.stringify(result.email)), []);
+});
+
+test('safety scan respects real line breaks between ordinary address wording and a city', () => {
+  const result = privacy.prepareOutbound({
+    subject: '연구계획서 행정 반려 안내',
+    threadText: '주소를 확인해 주세요.\n서울대학교의 연구계획서 보완사항을 확인해 주세요.'
+  });
+  assert.ok(result.email);
+  assert.doesNotThrow(() => privacy.validateOutboundEmail(result.email));
+});
+
+test('Gmail print-view sender lines lose names and addresses before transmission', () => {
+  const result = privacy.prepareOutbound({
+    subject: 'IRB administrative correction',
+    threadText: 'Sender Name <sender@hospital.example> 2026-09-26\n받는사람: Recipient Name <me@hospital.example>\nPlease revise the consent timing in the study plan.',
+    selfEmails: ['me@hospital.example']
+  });
+  assert.ok(result.email);
+  assert.match(result.email.thread_text, /\[REDACTED\]/);
+  assert.match(result.email.thread_text, /받는사람: \[SELF\]/);
+  assert.doesNotMatch(JSON.stringify(result.email), /Sender Name|Recipient Name|sender@|me@/);
+});
+
 test('patient and finance keywords alone do not lock routine work mail', () => {
   for (const message of ['외래 일정 안내', '연구 participant 모집 공고', '입금 절차 안내']) {
     const result = privacy.prepareOutbound({ subject: message, snippet: '일반 안내 메일입니다.' });
@@ -194,7 +227,7 @@ test('manifest permissions are unchanged and privacy helper loads before content
   assert.deepEqual(manifest.host_permissions, ['https://mail.google.com/*', 'https://api.typesafe.ai/*']);
   assert.deepEqual(manifest.content_scripts[0].js, ['privacy.js', 'content.js']);
   const content = fs.readFileSync(path.join(__dirname, '..', 'content.js'), 'utf8');
-  assert.match(content, /CACHE_SCHEMA = 6/);
+  assert.match(content, /CACHE_SCHEMA = 7/);
   assert.match(content, /cacheSchema === CACHE_SCHEMA/);
   assert.match(content, /function extensionAlive\(\)/);
   assert.match(content, /function safeStorageSet\(values\)/);

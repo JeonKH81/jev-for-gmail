@@ -4,7 +4,7 @@
   const MAX_AGE_DAYS = 7;          // score only mails whose latest message is within N days
   const CONCURRENCY = 4;
   const CACHE_TTL_DAYS = 30;
-  const CACHE_SCHEMA = 6;          // privacy rule changes must not reuse older decisions
+  const CACHE_SCHEMA = 7;          // privacy rule changes must not reuse older decisions
   const W = { act: 0.4, urg: 0.3, imp: 0.3, doneDiscount: 0.6 };
   const t = (key, substitutions) => chrome.i18n.getMessage(key, substitutions) || key;
   const CATEGORY_MESSAGES = {
