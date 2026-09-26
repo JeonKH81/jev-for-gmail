@@ -17,6 +17,7 @@
   const LONG_NUMBER_RE = /\b\d{7,}\b/g;
   const ADDRESS_RE = /(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주)\S*\s+\S+(?:시|군|구)\s+[^\n,]{0,40}?(?:로|길)\s*\d+(?:번길\s*\d+)?(?:\s*\([^)\n]{0,20}\))?/g;
   const ADDRESS_WORD_RE = /(주소|자택|배송지|거주지|우편\s*번호|address)\s*[:：]?[^\n]{0,40}(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주)/gi;
+  const LABELED_ADDRESS_LINE_RE = /(?:주소|자택|배송지|거주지|우편\s*번호|\baddress\b)\s*[:：]?[^\n]{0,40}(?:서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충청|충북|충남|전라|전북|전남|경상|경북|경남|제주)[^\n]*/gi;
   const SECRET_RE = /((?:비밀\s*번호|password|PW|pw|ID|아이디)\s*[:：]\s*)\S+/g;
   const LOGIN_CREDENTIAL_RE = /(?:비밀\s*번호|패스워드|password|PW|pw)\s*[:：]\s*\S+/gi;
   const AUTH_SECRET_RE = /(?:OTP|인증\s*번호|보안\s*코드)\s*[:：#-]?\s*\d{4,8}/gi;
@@ -26,6 +27,7 @@
   const CLINICAL_PATIENT_NAME_RE = /환자\s+[가-힣]{2,4}(?:님)?\s+(?:검사|진료|입원|퇴원|시술|수술|처방|예약|결과)/g;
   const PATIENT_SCHEDULE_RE = /(?:중재\s*)?시술\s*(?:스케줄|일정)|수술\s*(?:스케줄|일정)|입원\s*(?:대기|예정)?.{0,12}(?:우선\s*순위\s*)?(?:명단|목록)|환자\s*(?:명단|목록)/i;
   const HEADER_RE = /^\s*(from|to|cc|bcc|reply-to|sender|보낸\s*사람|받는\s*사람|참조|숨은\s*참조|회신\s*주소|발신|수신)\s*[:：].*$/gim;
+  const UNLABELED_SENDER_RE = new RegExp('^[ \\t]*[^\\n<>]{1,100}<\\s*' + EMAIL_RE.source + '\\s*>[^\\n]*$', 'gim');
 
   const test = (re, value) => { re.lastIndex = 0; return re.test(value || ''); };
   const domains = emails => (emails || []).map(x => String(x).toLowerCase().split('@')[1]).filter(Boolean);
@@ -94,6 +96,7 @@
       .replace(AUTH_SECRET_RE, '[인증정보]')
       .replace(STRUCTURED_NUMBER_RE, '[번호]')
       .replace(SECRET_RE, '$1[가림]')
+      .replace(LABELED_ADDRESS_LINE_RE, '[주소]')
       .replace(ADDRESS_RE, '[주소]')
       .replace(LONG_NUMBER_RE, '[번호]');
   }
@@ -104,7 +107,8 @@
       const label = (line.match(/^\s*([^:：]+)/) || [])[1]?.trim() || 'header';
       const isSelf = own.some(email => line.toLowerCase().includes(email));
       return `${label}: ${isSelf ? '[SELF]' : '[REDACTED]'}`;
-    });
+    }).replace(UNLABELED_SENDER_RE, line =>
+      own.some(email => line.toLowerCase().includes(email)) ? '[SELF]' : '[REDACTED]');
   }
 
   function senderType(senderEmails = [], selfEmails = []) {
@@ -150,7 +154,7 @@
       sender_type: senderType(senderEmails, selfEmails),
       [threadText == null ? 'preview' : 'thread_text']: safeText
     };
-    const findings = finalSafetyScan(JSON.stringify(email));
+    const findings = finalSafetyScan(Object.values(email).join('\n'));
     return findings.length ? { excluded: 'personal', excludedDetail: 'final_safety_scan', findings } : { email };
   }
 
@@ -164,7 +168,7 @@
     if (!allowedSenderTypes.includes(clean.sender_type)) throw new Error('Invalid sender type');
     const externalTextLength = (clean.subject || '').length + (clean.thread_text || clean.preview || '').length;
     if (externalTextLength > MAX_EXTERNAL_TEXT) throw new Error('External text exceeds privacy limit');
-    const findings = finalSafetyScan(JSON.stringify(clean));
+    const findings = finalSafetyScan(Object.values(clean).join('\n'));
     if (findings.length) throw new Error(`Privacy safety scan blocked: ${findings.join(', ')}`);
     return clean;
   }

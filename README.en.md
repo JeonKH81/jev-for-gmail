@@ -41,7 +41,7 @@ Hover over a badge to see the component scores.
 - **Messages with clear high-risk data are not sent.** The extension locks patient procedure or surgery schedules, admission or patient rosters, patient tables containing fields such as registration number, date of birth and diagnosis, senders explicitly excluded by the user, explicit patient names or IDs, valid Korean resident registration numbers, card or account numbers, passport numbers, authentication secrets, and actual login credentials.
 - Ordinary work words such as `patient`, `outpatient`, `participant`, `deposit`, `account`, or `address` do not lock a message by themselves. Email addresses, phone numbers, addresses, dates of birth, and ordinary numbers are masked locally before transmission.
 - Raw sender names and email addresses are never included in TypeSafe requests. The sender is classified locally as `organization_internal`, `academic_organization`, `journal_platform`, `automated`, or `external`.
-- Address headers such as `From`, `To`, `Cc`, `Bcc`, and `Reply-To` are replaced locally with `[SELF]` or `[REDACTED]`. No external name-detection or NER service is used.
+- Address headers such as `From`, `To`, `Cc`, `Bcc`, and `Reply-To`, as well as unlabelled sender name and email lines in Gmail's print view, are replaced locally with `[SELF]` or `[REDACTED]`. Address lines without street numbers are masked too. No external name-detection or NER service is used.
 - A final safety scan runs after masking. If an email address, phone number, resident registration number, card or account number, passport number, address, patient ID, or another risky pattern remains, the entire message is locked and not sent.
 - Only the de-identified role selected in Settings is sent. Email addresses entered under “My email addresses” are used locally only to identify `[SELF]` replies and are never sent to TypeSafe.
 - The `already_handled` estimate can use `[SELF]` markers, expired deadlines, and locally retained follow-up confirmation rules.
@@ -87,7 +87,7 @@ Use the toolbar icon to turn badges on or off, clear the local score cache, or o
 
 ## Permissions
 
-Version 1.2.0 adds localization without adding any permissions. The extension continues to request only local storage plus access to Gmail and the TypeSafe API.
+Localization and the privacy fixes did not add permissions. The extension continues to request only local storage plus access to Gmail and the TypeSafe API.
 
 ## License
 
